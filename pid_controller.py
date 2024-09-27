@@ -32,9 +32,8 @@ class PIDController:
         correction_angle_x = correction_x / self.pixels_per_degree
         correction_angle_y = correction_y / self.pixels_per_degree
 
-        correction_angle_x = np.clip(correction_angle_x, 55, 130)
-        correction_angle_y = np.clip(correction_angle_y, 80, 130)
-        #TODO: авто нахождение ограничительных углов
+        self.previous_error_x = error_x
+        self.previous_error_y = error_y
 
         return correction_angle_x, correction_angle_y
 

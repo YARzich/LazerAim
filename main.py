@@ -9,15 +9,15 @@ import mouse_detect
 import arduino_connection
 
 
+cv2.namedWindow("Camera")
+cv2.resizeWindow("Camera", 1280, 720)
+
 arduino = arduino_connection.Arduino()
 pid = pid_controller.PIDController()
 mouse = mouse_detect.MouseDetect()
 lazer = lazer.Lazer()
 
 cap = cv2.VideoCapture(0)
-
-cv2.namedWindow("Camera")
-cv2.resizeWindow("Camera", 1280, 720)
 
 cv2.namedWindow("PID Controls")
 cv2.createTrackbar("Kp", "PID Controls", int(pid.Kp * 100), 100, pid.update_Kp)
@@ -34,13 +34,17 @@ while True:
     currentX, currentY = lazer.lazer_detected(frame)
 
     if mouse.mouseX >= 0 and mouse.mouseY >= 0:
-        # Расчет ошибок
         error_x = mouse.mouseX - currentX
         error_y = mouse.mouseY - currentY
 
         correction_angle_x, correction_angle_y = pid.update(error_x, error_y)
 
-        arduino.set_angle(int(correction_angle_x), int(correction_angle_y))
+        if mouse.left_button_pressed:
+            arduino.set_correction_angle(int(correction_angle_x), int(correction_angle_y))
+            print("mouseX: " + str(mouse.mouseX) + "\n" + "mouseY: " + str(mouse.mouseY))
+            print("currentX: " + str(currentX) + "\n" + "currentY: " + str(currentY))
+            print("error_x: " + str(error_x) + "\n" + "error_y: " + str(error_y))
+            print("correction_angle_x: " + str(correction_angle_x) + "\n" + "correction_angle_y: " + str(correction_angle_y))
 
         previous_error_x = error_x
         previous_error_y = error_y
@@ -63,6 +67,7 @@ while True:
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
-
+    if cv2.waitKey(1) & 0xFF == ord('s'):
+        arduino.set_start_angle()
 cap.release()
 cv2.destroyAllWindows()
